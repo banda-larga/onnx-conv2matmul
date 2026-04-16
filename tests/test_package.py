@@ -13,14 +13,9 @@ from onnx_conv2matmul import (
     RewriteOptions,
     __version__,
     compare_tensors,
-    hello,
     rewrite_conv1x1_to_matmul,
 )
 from onnx_conv2matmul.cli import main
-
-
-def test_hello() -> None:
-    assert hello() == "Hello from onnx-conv2matmul!"
 
 
 def test_version_format() -> None:

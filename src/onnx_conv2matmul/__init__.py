@@ -15,7 +15,6 @@ from .validation import (
 )
 
 __all__ = [
-    "hello",
     "__version__",
     "DEFAULT_VALIDATION_SEED",
     "RewriteReport",
@@ -30,7 +29,3 @@ __all__ = [
     "ensure_finite",
 ]
 __version__ = "0.1.0"
-
-
-def hello() -> str:
-    return "Hello from onnx-conv2matmul!"
