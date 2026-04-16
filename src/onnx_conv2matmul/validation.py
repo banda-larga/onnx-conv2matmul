@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import List
 
 import numpy as np
 
@@ -68,7 +69,7 @@ def create_cpu_session(
     )
 
 
-def parse_lengths(raw: str) -> list[int]:
+def parse_lengths(raw: str) -> List[int]:
     values = [part.strip() for part in raw.split(",") if part.strip()]
     lengths = [int(v) for v in values]
     if not lengths:

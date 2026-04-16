@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import List, Tuple
 
 import numpy as np
 import onnx
@@ -32,9 +33,9 @@ def test_default_validation_seed_is_stable() -> None:
 
 def _build_conv1x1_model(
     *,
-    stride: tuple[int, int] = (1, 1),
-    pads: tuple[int, int, int, int] = (0, 0, 0, 0),
-    dilations: tuple[int, int] = (1, 1),
+    stride: Tuple[int, int] = (1, 1),
+    pads: Tuple[int, int, int, int] = (0, 0, 0, 0),
+    dilations: Tuple[int, int] = (1, 1),
     tensor_dtype: int = TensorProto.FLOAT,
 ) -> onnx.ModelProto:
     in_h = 4
@@ -75,9 +76,9 @@ def _build_conv1x1_model(
 
 def _build_conv1d_pointwise_model(
     *,
-    stride: tuple[int] = (1,),
-    pads: tuple[int, int] = (0, 0),
-    dilations: tuple[int] = (1,),
+    stride: Tuple[int] = (1,),
+    pads: Tuple[int, int] = (0, 0),
+    dilations: Tuple[int] = (1,),
 ) -> onnx.ModelProto:
     x = helper.make_tensor_value_info("x", TensorProto.FLOAT, [1, 3, 9])
 
@@ -146,10 +147,10 @@ def _run_model(model: onnx.ModelProto, x_value: np.ndarray) -> np.ndarray:
 
 def _build_conv_model_for_analysis(
     *,
-    kernel: tuple[int, int] = (1, 1),
-    stride: tuple[int, int] = (1, 1),
-    pads: tuple[int, ...] = (0, 0, 0, 0),
-    dilations: tuple[int, ...] = (1, 1),
+    kernel: Tuple[int, int] = (1, 1),
+    stride: Tuple[int, int] = (1, 1),
+    pads: Tuple[int, ...] = (0, 0, 0, 0),
+    dilations: Tuple[int, ...] = (1, 1),
     group: int = 1,
     auto_pad: str = "NOTSET",
     constant_weight: bool = True,
@@ -164,7 +165,7 @@ def _build_conv_model_for_analysis(
 
     conv_inputs = ["x"]
     graph_inputs = [x]
-    initializers: list[TensorProto] = []
+    initializers: List[TensorProto] = []
 
     w_shape = [out_channels, in_channels // max(group, 1), kernel[0], kernel[1]]
     w_values = np.arange(np.prod(w_shape), dtype=np.float32).reshape(w_shape)

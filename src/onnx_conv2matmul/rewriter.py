@@ -1,6 +1,6 @@
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import onnx
@@ -25,9 +25,9 @@ class RewriteNodeReport:
 class RewriteReport:
     converted: int
     skipped: int
-    nodes: tuple["RewriteNodeReport", ...] = ()
+    nodes: Tuple["RewriteNodeReport", ...] = ()
 
-    def to_json_dict(self) -> dict[str, Any]:
+    def to_json_dict(self) -> Dict[str, Any]:
         return {
             "converted": self.converted,
             "skipped": self.skipped,
@@ -46,7 +46,7 @@ class RewriteOptions:
     allow_non_unit_dilation: bool = False
     # Optional operational guardrail: skip Conv1x1 if any dilation component
     # exceeds this value.
-    max_dilation: int | None = None
+    max_dilation: Optional[int] = None
 
 
 def _attr_int(node: onnx.NodeProto, name: str, default: int) -> int:
@@ -56,7 +56,7 @@ def _attr_int(node: onnx.NodeProto, name: str, default: int) -> int:
     return default
 
 
-def _attr_ints(node: onnx.NodeProto, name: str, default: list[int]) -> list[int]:
+def _attr_ints(node: onnx.NodeProto, name: str, default: List[int]) -> List[int]:
     for attr in node.attribute:
         if attr.name == name:
             return [int(v) for v in attr.ints]
@@ -73,7 +73,7 @@ def _attr_str(node: onnx.NodeProto, name: str, default: str) -> str:
     return default
 
 
-def _make_i64_initializer(name: str, values: list[int]) -> TensorProto:
+def _make_i64_initializer(name: str, values: List[int]) -> TensorProto:
     return helper.make_tensor(
         name=name,
         data_type=TensorProto.INT64,
@@ -96,13 +96,13 @@ def _make_zero_scalar_initializer(name: str, data_type: int) -> TensorProto:
         TensorProto.BFLOAT16,
     }
     if data_type in float_like_types:
-        vals: list[float | int] = [0.0]
+        vals: List[Union[float, int]] = [0.0]
     else:
         vals = [0]
     return helper.make_tensor(name=name, data_type=data_type, dims=[], vals=vals)
 
 
-def _unique_name(base: str, used: set[str]) -> str:
+def _unique_name(base: str, used: Set[str]) -> str:
     if base not in used:
         used.add(base)
         return base
@@ -121,7 +121,7 @@ def _build_constant_matmul_rhs(
     name: str,
     out_channels: int,
     in_channels: int,
-) -> TensorProto | None:
+) -> Optional[TensorProto]:
     try:
         w_array = numpy_helper.to_array(weight_tensor)
     except Exception:
@@ -160,14 +160,14 @@ class _Conv1DPlan:
 
 @dataclass(frozen=True)
 class _ConvAnalysis:
-    plan: _Conv1x1Plan | _Conv1DPlan | None
+    plan: Optional[Union[_Conv1x1Plan, _Conv1DPlan]]
     reason: str
 
 
 def _get_conv1x1_plan(
     node: onnx.NodeProto,
-    initializer_names: set[str],
-    initializers: dict[str, TensorProto],
+    initializer_names: Set[str],
+    initializers: Dict[str, TensorProto],
 ) -> _ConvAnalysis:
     if node.op_type != "Conv":
         return _ConvAnalysis(plan=None, reason="not_conv")
@@ -240,8 +240,8 @@ def _get_conv1x1_plan(
 
 def rewrite_conv1x1_to_matmul(
     model: onnx.ModelProto,
-    options: RewriteOptions | None = None,
-) -> tuple[onnx.ModelProto, RewriteReport]:
+    options: Optional[RewriteOptions] = None,
+) -> Tuple[onnx.ModelProto, RewriteReport]:
     if options is None:
         options = RewriteOptions()
     if options.max_dilation is not None and options.max_dilation < 1:
@@ -268,9 +268,9 @@ def rewrite_conv1x1_to_matmul(
 
     converted = 0
     skipped = 0
-    node_reports: list[RewriteNodeReport] = []
-    new_nodes: list[onnx.NodeProto] = []
-    new_initializers: list[TensorProto] = []
+    node_reports: List[RewriteNodeReport] = []
+    new_nodes: List[onnx.NodeProto] = []
+    new_initializers: List[TensorProto] = []
 
     for node_index, node in enumerate(graph.node):
         node_name = node.name if node.name else f"{node.op_type}@{node_index}"
@@ -696,7 +696,7 @@ def rewrite_conv1x1_to_matmul(
     )
 
 
-def rewrite_file(input_path: str | Path, output_path: str | Path) -> RewriteReport:
+def rewrite_file(input_path: Union[str, Path], output_path: Union[str, Path]) -> RewriteReport:
     in_path = Path(input_path)
     out_path = Path(output_path)
 

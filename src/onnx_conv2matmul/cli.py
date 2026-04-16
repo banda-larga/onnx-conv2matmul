@@ -1,7 +1,7 @@
 import json
 from collections import Counter
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, Optional, Tuple
 
 import click
 import numpy as np
@@ -19,7 +19,7 @@ from .validation import (
 )
 
 
-def _render_reason_table(console: Console, report_json: dict) -> None:
+def _render_reason_table(console: Console, report_json: Dict[str, Any]) -> None:
     reasons = Counter(node["reason"] for node in report_json["nodes"])
     if not reasons:
         return
@@ -36,7 +36,7 @@ def _has_external_initializers(model: onnx.ModelProto) -> bool:
     return any(uses_external_data(init) for init in model.graph.initializer)
 
 
-def _is_float_tensor(type_str: str | None) -> bool:
+def _is_float_tensor(type_str: Optional[str]) -> bool:
     if not type_str:
         return False
     return type_str in {
@@ -47,7 +47,7 @@ def _is_float_tensor(type_str: str | None) -> bool:
     }
 
 
-def _is_int_tensor(type_str: str | None) -> bool:
+def _is_int_tensor(type_str: Optional[str]) -> bool:
     if not type_str:
         return False
     return type_str in {
@@ -67,18 +67,18 @@ def _rank(shape: Any) -> int:
         return -1
 
 
-def _maybe_int(v: Any) -> int | None:
+def _maybe_int(v: Any) -> Optional[int]:
     return int(v) if isinstance(v, int) and v > 0 else None
 
 
 def _resolve_verify_io(
     session: Any,
     *,
-    signal_input_name: str | None,
-    length_input_name: str | None,
+    signal_input_name: Optional[str],
+    length_input_name: Optional[str],
     tensor_output_index: int,
-    length_output_index: int | None,
-) -> tuple[str, str, int, int | None]:
+    length_output_index: Optional[int],
+) -> Tuple[str, str, int, Optional[int]]:
     inputs = session.get_inputs()
     outputs = session.get_outputs()
 
@@ -141,11 +141,11 @@ def _run_verify(
     max_abs_threshold: float,
     mean_abs_threshold: float,
     deterministic_cpu_verify: bool,
-    verify_signal_input_name: str | None,
-    verify_length_input_name: str | None,
+    verify_signal_input_name: Optional[str],
+    verify_length_input_name: Optional[str],
     verify_output_index: int,
-    verify_length_output_index: int | None,
-    verify_channels: int | None,
+    verify_length_output_index: Optional[int],
+    verify_channels: Optional[int],
 ) -> None:
     if seed < 0:
         raise click.UsageError("--verify-seed must be >= 0")
@@ -399,12 +399,12 @@ def _run_verify(
 )
 def main(
     input_path: Path,
-    output_path: Path | None,
+    output_path: Optional[Path],
     inplace: bool,
     extended_conv1x1: bool,
     allow_non_unit_dilation: bool,
-    max_dilation: int | None,
-    report_json: Path | None,
+    max_dilation: Optional[int],
+    report_json: Optional[Path],
     report_json_stdout: bool,
     skip_checker: bool,
     verify: bool,
@@ -415,11 +415,11 @@ def main(
     verify_max_abs_threshold: float,
     verify_mean_abs_threshold: float,
     verify_deterministic_cpu: bool,
-    verify_signal_input_name: str | None,
-    verify_length_input_name: str | None,
+    verify_signal_input_name: Optional[str],
+    verify_length_input_name: Optional[str],
     verify_output_index: int,
-    verify_length_output_index: int | None,
-    verify_channels: int | None,
+    verify_length_output_index: Optional[int],
+    verify_channels: Optional[int],
 ) -> None:
     console = Console()
 
