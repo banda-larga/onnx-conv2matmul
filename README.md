@@ -18,6 +18,8 @@ Why this matters in practice:
 The tool is conservative by default, keeps unsupported layers untouched, and emits a
 detailed report of converted vs skipped nodes with explicit reasons.
 
+**Showcase:** This tool was used to produce [Parakeet TDT 0.6B v3 ONNX (int4/int8 hybrid)](https://huggingface.co/efederici/parakeet-tdt-0.6b-v3-onnx-int4) which runs natively in web browsers via WebGPU, achieving a 6x size reduction (409 MB) with half the quantization degradation of pure INT8.
+
 ### Install
 
 From PyPI:
