@@ -1,6 +1,6 @@
 [project]
 name = "onnx-conv2matmul"
-version = "0.1.0"
+version = "0.1.1"
 description = "Utilities to rewrite ONNX convolution patterns into matrix multiplication forms."
 readme = "README.md"
 authors = [
