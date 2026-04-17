@@ -67,47 +67,58 @@ onnx-conv2matmul encoder-model.onnx encoder-model.preq.onnx \
 This converts compatible pointwise conv layers (`Conv1D k=1` and `Conv2D 1x1`) to `MatMul` and writes a JSON report
 with converted/skipped nodes and reasons.
 
-### Hugging Face FP32 -> Pre-Quantization Workflow
+### Parakeet: From Original NeMo Checkpoint to Pre-Quantization
 
-If you start from the original FP32 ONNX release:
+If you want to start from the true original FP32 PyTorch release:
 
-- https://huggingface.co/istupakov/parakeet-tdt-0.6b-v3-onnx
+- https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
 
-you can download only the files needed for encoder pre-quantization and run the rewrite.
+you can export the ONNX graphs directly from the official `.nemo` checkpoint using the `nemo_toolkit` library.
 
-1. Download required files from Hugging Face
-
-```bash
-pip install "huggingface_hub[cli]"
-hf download istupakov/parakeet-tdt-0.6b-v3-onnx \
-	--local-dir ./hf_parakeet_fp32 \
-	--include encoder-model.onnx encoder-model.onnx.data config.json vocab.txt
-```
-
-2. Run pre-quantization rewrite on encoder
+**1. Install NeMo:**
 
 ```bash
-cd hf_parakeet_fp32
-onnx-conv2matmul encoder-model.onnx encoder-model.preq.onnx \
-	--extended-conv1x1 \
-	--allow-non-unit-dilation \
-	--max-dilation 4 \
-	--skip-checker \
-	--report-json encoder-model.preq.report.json
+pip install nemo_toolkit[asr]
 ```
 
-3. Check conversion summary
+**2. Export the FP32 ONNX Encoder Graph:**
+
+```python
+import nemo.collections.asr as nemo_asr
+
+# Download from HF and load the PyTorch NeMo model
+model = nemo_asr.models.ASRModel.from_pretrained(model_name="nvidia/parakeet-tdt-0.6b-v3")
+model.eval()
+
+# Export the encoder directly to match the filename convention
+model.encoder.export("encoder-model.onnx")
+```
+
+*(Note: Pre-exported ONNX repositories like `istupakov/parakeet-tdt-0.6b-v3-onnx` are convenient and contain also decoder/joint, but the script above ensures you are exporting the absolute official source directly from NVIDIA's PyTorch checkpoint).*
+
+**3. Run pre-quantization rewrite on the exported encoder:**
+
+```bash
+onnx-conv2matmul parakeet-encoder.onnx encoder-model.preq.onnx \
+        --extended-conv1x1 \
+        --allow-non-unit-dilation \
+        --max-dilation 4 \
+        --skip-checker \
+        --report-json encoder-model.preq.report.json
+```
+
+**4. Check conversion summary**
 
 ```bash
 cat encoder-model.preq.report.json
 ```
 
-4. Verify I/O equivalence (robust numerical check)
+**5. Verify I/O equivalence (robust numerical check)**
 
 The CLI includes a built-in strict CPU deterministic verification. It runs inputs through both models to ensure the maximum numerical deviation remains within safe float32 bounds (`max_abs <= 3e-5`, `mean_abs <= 2e-6`).
 
 ```bash
-onnx-conv2matmul encoder-model.onnx encoder-model.preq.onnx \
+onnx-conv2matmul parakeet-encoder.onnx encoder-model.preq.onnx \
 	--verify \
 	--verify-signal-input-name audio_signal \
 	--verify-length-input-name length \
