@@ -1,5 +1,8 @@
 ## onnx-conv2matmul
 
+[![PyPI version](https://badge.fury.io/py/onnx-conv2matmul.svg)](https://badge.fury.io/py/onnx-conv2matmul)
+[![CI Status](https://github.com/banda-larga/onnx-conv2matmul/actions/workflows/ci.yml/badge.svg)](https://github.com/banda-larga/onnx-conv2matmul/actions)
+
 `onnx-conv2matmul` is a pre-quantization rewrite tool for ONNX models.
 
 It converts compatible `Conv` 1x1 layers into equivalent `MatMul` subgraphs so your
